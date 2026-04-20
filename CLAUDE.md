@@ -138,9 +138,11 @@ venv\Scripts\python.exe run.py "https://my.matterport.com/show/?ref=pn&m=模型I
 4. **JS 版本不匹配** — Matterport 从 26.2.4 升级到 26.3.4，增量下载跳过旧文件导致 webpack chunk 不匹配。修复：清除所有 JS/HTML/CSS 文件后重新下载（加 `--no-main-asset-download` + `&brand=0`）
 5. **模型 404** — 某些模型已下线无法下载（如 `X9wJ8LP4LRA`），需先确认在线可访问
 6. **Overlay 瓦片缺失（defurnished/家具切换模型专属）** — 带 defurnished view 的模型（`czVDUnbDue6` 是首个案例）点击部分圆盘时转圈卡死或进入后全图模糊。
+   - **触发判定（简单直接）**：**模型没有 defurnished view 就不会遇到此 bug**。判断方式：下载日志里有无警告 `#### WARNING: Model has defurnished view ...`（或 `grep "defurnished view" downloads/<ID>/run_report.log`）。已归档 7 个模型中只 `czVDUnbDue6` 触发；另 6 个（Kfa2BHFroVn / Bmz3NvZfvx6 / pVAbacdvn9h / DHNjTb7tAw5 / zTURYF5wgYr / 3Yzq4Bq71BP）均无此层，天然免疫。
    - **根因**：`matterport-dl.py` 只从 `graph_GetShowcaseSweeps.json` 的 `tileUrlTemplate` 抓**主路径**瓦片（`assets/~/tiles/<sweep>/<res>_face_*.jpg`），**不解析** `index.html` 里 `window.MP_PREFETCHED_MODELDATA` 中的 **overlay 路径** tile template（`assets/overlay/<overlay_uuid>/~/tiles/<sweep>/<res>_face_*.jpg`）。这些 overlay tile 是 Matterport 家具抹除/切换功能用的二次渲染纹理，只有部分 sweep 才需要（非 defurnished 模型根本没这层）。
-   - **修复**：从 `index.html` 的 `MP_PREFETCHED_MODELDATA` 提取 overlay `tileUrlTemplate`（含有**目录级签名** `k=models/<id>/assets/overlay/<ol>`，一签管整个 overlay 子树），按主路径同样逻辑枚举 `res × face × (x,y)` 下载。**首个诊断线索**：server.log 出现大量 404 路径形如 `.../assets/overlay/<32位 hex>/~/tiles/<sweep>/<res>_face_*.jpg`。
-   - czVDUnbDue6 实战数据：63 个 sweep 中 9 个用了 `468caae3ed444fabb4b1bce1d272f1ab` overlay，共补回 4590 个 tile（512/1k/2k/4k 四档），全都能用目录级签名批量拉。
+   - **修复**：已在 `showcase-latest-upgrade` 分支新增 `downloadOverlaySweeps()` 函数（`matterport-dl.py`），从 `index.html` 的 `MP_PREFETCHED_MODELDATA` 提取 overlay `tileUrlTemplate`（含**目录级签名** `k=models/<id>/assets/overlay/<ol>`，一签管整个 overlay 子树），按主路径同样逻辑枚举 `res × face × (x,y)` 下载。非 defurnished 模型 regex 零匹配 → 无新开销。
+   - **诊断线索**：`server.log` 出现大量 404 路径形如 `.../assets/overlay/<32位 hex>/~/tiles/<sweep>/<res>_face_*.jpg`。
+   - **czVDUnbDue6 实战数据**：63 个 sweep 中 9 个用了 overlay `468caae3ed444fabb4b1bce1d272f1ab`，共补回 4590 个 tile（512/1k/2k/4k 四档全齐），全都能用同一个目录级签名批量拉取。
 
 ## 已知问题（无需修复）
 - 插件 404（compass、minimap 等）— 预期行为，不影响核心导览
