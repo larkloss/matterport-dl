@@ -58,10 +58,10 @@
 - **必须先从浏览器抓 auth token 才能下载**（看下方"私有模型下载"章节）
 
 **czVDUnbDue6（8111 Saint Martins Ln, Philadelphia, PA）— 私有模型**
-- 大小：1.78 GB | 文件数：46951
 - 全景瓦片：46332 张 JPG | 3D 网格：218 个 `.glb`
 - 总下载资源：39402（Success 39291，100%）| 生成裁剪图：8036
-- 用时约 22 分钟（tileset 阶段未被限速）
+- **必须先从浏览器抓 auth token 才能下载**（看下方"私有模型下载"章节）
+- **带 defurnished view**（家具抹除/切换功能），触发踩坑 #6 overlay tile 漏下载；修复见 `showcase-latest-upgrade` 分支
 
 **3Yzq4Bq71BP（240 Library Place, Princeton, NJ）**
 - 全景瓦片：76907 张 JPG | 3D 网格：244 个 `.glb`
