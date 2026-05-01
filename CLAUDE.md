@@ -17,6 +17,7 @@
 | 16 Point Rd, Bellport, NY | `zTURYF5wgYr` | ✅ 已验证（私有模型）|
 | 8111 Saint Martins Ln, Philadelphia, PA | `czVDUnbDue6` | ✅ 已验证（私有模型）|
 | 240 Library Place, Princeton, NJ | `3Yzq4Bq71BP` | ✅ 已验证 |
+| 2222 Wyoming Ave NW, Washington, DC | `KNSj7socXtz` | ✅ 已验证（私有模型，Showcase 26.4.5 首例）|
 
 ## 项目状态
 
@@ -50,7 +51,6 @@
 **DHNjTb7tAw5（535 Park Avenue_4AB, nyc）**
 - 全景瓦片：12360 张 JPG | 3D 网格：19 个 `.glb`
 - 含 Draco/Basis 解码器
-- **注意**：下载时 `showcase.modified.js` / `vendors-react.modified.js` 自动生成，但 `init.modified.js` 和 `packages-cwf-util.modified.js` 需手动补丁（Python 脚本：替换 `.onStale`→`.onStal`、`validUntil&&this.onStale`→`validUntil&&false`）
 
 **zTURYF5wgYr（16 Point Rd, Bellport, NY）— 私有模型**
 - 总下载资源：180875（Skipped 160590，Requested 20285，Success 20239）
@@ -67,6 +67,13 @@
 - 全景瓦片：76907 张 JPG | 3D 网格：244 个 `.glb`
 - Total fetches: 69230 | Success: 69082 (100%) | 生成裁剪图: 8928
 - 公开模型，含 Draco/Basis 解码器
+
+**KNSj7socXtz（2222 Wyoming Ave NW, Washington, DC）— 私有模型**
+- 总下载资源：59154（Success 55611，94%）| 生成裁剪图：7840 | 18 GB
+- **Showcase 26.4.5_webgl-632 首例 + Three.js 0.184.0**（之前都是 26.4.3 / 0.176.0）
+- **必须先从浏览器抓 auth token 才能下载**（看下方"私有模型下载"章节）
+- **defurnished 模型**（companion id `0m52t3rzmeqydn21h9ezerzid`，未下载）—— 但实现机制与 czVDUnbDue6 不同：**整模型替换**而非 overlay 层叠加，所以踩坑 #5 不适用，没漏 overlay tile
+- 触发了 3 个新坑（详见踩坑 #6/#7/#8）：插件下载 400 致命、`/api/mp/accounts/graph` 端点、新 image/font 资源缺失
 
 ## Commands
 
@@ -136,12 +143,26 @@ venv\Scripts\python.exe run.py "https://my.matterport.com/show/?ref=pn&m=模型I
 2. **Draco/Basis 解码器缺失** — 所有 `.glb` 3D 网格瓦片无法渲染。修复：从旧模型复制 WASM 文件
 3. **全景瓦片缺失** — `~/tiles/` 目录不存在，无法进入房间。修复：增量重新下载
 4. **模型 404** — 某些模型已下线无法下载（如 `X9wJ8LP4LRA`），需先确认在线可访问
-5. **Overlay 瓦片缺失（defurnished/家具切换模型专属）** — 带 defurnished view 的模型（`czVDUnbDue6` 是首个案例）点击部分圆盘时转圈卡死或进入后全图模糊。
-   - **触发判定（简单直接）**：**模型没有 defurnished view 就不会遇到此 bug**。判断方式：下载日志里有无警告 `#### WARNING: Model has defurnished view ...`（或 `grep "defurnished view" downloads/<ID>/run_report.log`）。已归档 7 个模型中只 `czVDUnbDue6` 触发；另 6 个（Kfa2BHFroVn / Bmz3NvZfvx6 / pVAbacdvn9h / DHNjTb7tAw5 / zTURYF5wgYr / 3Yzq4Bq71BP）均无此层，天然免疫。
-   - **根因**：`matterport-dl.py` 只从 `graph_GetShowcaseSweeps.json` 的 `tileUrlTemplate` 抓**主路径**瓦片（`assets/~/tiles/<sweep>/<res>_face_*.jpg`），**不解析** `index.html` 里 `window.MP_PREFETCHED_MODELDATA` 中的 **overlay 路径** tile template（`assets/overlay/<overlay_uuid>/~/tiles/<sweep>/<res>_face_*.jpg`）。这些 overlay tile 是 Matterport 家具抹除/切换功能用的二次渲染纹理，只有部分 sweep 才需要（非 defurnished 模型根本没这层）。
-   - **修复**：已在 `showcase-latest-upgrade` 分支新增 `downloadOverlaySweeps()` 函数（`matterport-dl.py`），从 `index.html` 的 `MP_PREFETCHED_MODELDATA` 提取 overlay `tileUrlTemplate`（含**目录级签名** `k=models/<id>/assets/overlay/<ol>`，一签管整个 overlay 子树），按主路径同样逻辑枚举 `res × face × (x,y)` 下载。非 defurnished 模型 regex 零匹配 → 无新开销。
+5. **Overlay 瓦片缺失（defurnished/家具切换模型专属，czVDUnbDue6 风格）** — 带 defurnished view 的模型点击部分圆盘时转圈卡死或进入后全图模糊。
+   - **重要前提**：defurnished 有**两种实现机制**，本坑只覆盖 **in-place overlay 叠加**（czVDUnbDue6 风格）；不覆盖**整模型替换**风格（KNSj7socXtz 风格 —— defurnished 是另一个独立模型 ID，单独下载即可，无 overlay tile 需求）。判断：grep `index.html` 是否含 `assets/overlay/<uuid>/~/tiles/...` 路径模板，有就是 in-place 风格。
+   - **触发判定**：下载日志里有 `#### WARNING: Model has defurnished view ...` + index.html 含 overlay tile 模板。已归档 8 个模型中只 czVDUnbDue6 触发。
+   - **根因**：`matterport-dl.py` 只从 `graph_GetShowcaseSweeps.json` 的 `tileUrlTemplate` 抓**主路径**瓦片（`assets/~/tiles/<sweep>/<res>_face_*.jpg`），**不解析** `index.html` 里 `window.MP_PREFETCHED_MODELDATA` 中的 **overlay 路径** tile template（`assets/overlay/<overlay_uuid>/~/tiles/<sweep>/<res>_face_*.jpg`）。
+   - **修复**：已在 `showcase-latest-upgrade` 分支新增 `downloadOverlaySweeps()` 函数（`matterport-dl.py`），从 `index.html` 的 `MP_PREFETCHED_MODELDATA` 提取 overlay `tileUrlTemplate`（含**目录级签名** `k=models/<id>/assets/overlay/<ol>`，一签管整个 overlay 子树），按主路径同样逻辑枚举 `res × face × (x,y)` 下载。非 overlay 模型 regex 零匹配 → 无新开销。
    - **诊断线索**：`server.log` 出现大量 404 路径形如 `.../assets/overlay/<32位 hex>/~/tiles/<sweep>/<res>_face_*.jpg`。
-   - **czVDUnbDue6 实战数据**：63 个 sweep 中 9 个用了 overlay `468caae3ed444fabb4b1bce1d272f1ab`，共补回 4590 个 tile（512/1k/2k/4k 四档全齐），全都能用同一个目录级签名批量拉取。
+   - **czVDUnbDue6 实战数据**：63 个 sweep 中 9 个用了 overlay `468caae3ed444fabb4b1bce1d272f1ab`，共补回 4590 个 tile（512/1k/2k/4k 四档全齐）。
+
+6. **Plugin 400 致命（Showcase 26.4.5+ 暴露）** — 下载阶段 `Downloading plugins...` 报 `HTTP Error 400: salesperson-info/1.0.21/plugin.json`，整个 `matterport-dl.py` 抛异常退出。
+   - **根因**：`downloadPlugins()` 调用 `downloadFile("PLUGIN", True, ...)`，遇到 Matterport CDN 对老插件版本返回 400 时直接 raise Exception，下载流程中断（且这一步在最后阶段，前面 1.7+ GB 下载白瞎）。
+   - **修复**：`downloadPlugins()` 内的 `downloadFile` 调用包 try/except，失败仅 WARN 日志记录后 continue（插件本身浏览器侧 JS 自带容错，缺失不致命）。已应用在 `showcase-latest-upgrade` 分支。
+
+7. **`/api/mp/accounts/graph` 端点未处理（Showcase 26.4.5+）** — 模型加载到 0.5s 第一帧后立刻雪崩 `NetworkError: A network error occurred`，浏览器显示"模型不可用"全黑。
+   - **根因**：26.4.5 新增 `/api/mp/accounts/graph` POST 端点（账号/auth 类查询），原本的本地 server `do_POST()` 只识别 `/api/mp/models/graph`，新端点 404 → JS 抛 NetworkError → loadApplication 链式崩溃。
+   - **修复**：`do_POST()` 同时识别 `/api/mp/models/graph` 和 `/api/mp/accounts/graph`，都路由到 `do_GraphRequest()`（返回 `{"data": {}}` 兜底）。已应用在 `showcase-latest-upgrade` 分支。
+
+8. **新静态资源 404 致 GLTFLoader 同步抛 NetworkError（Showcase 26.4.5+）** — 修完 #7 后又崩溃，触发链是模型 0.6s 加载后 `Failed to load .../images/scope.svg` 等导致 GLTFLoader 抛 NetworkError → loadApplication 崩。
+   - **根因**：26.4.5 引入了 `matterport-dl.py` 静态资源清单（`image_files`、`font_files`）里没列出的新文件：`scope.svg` `vert_arrows.png` `surface_grid_planar_256.png` `logo-white.svg` `logo-white-r.svg` `nav_help_gesture_drag_two_finger_rotate.svg` `atlas.png`（之前认为无害的，26.4.5 实际必需）`mp-font.woff` / `mp-font.woff2`。在 26.4.3 时 split.js (intersection visuals) 不需要这些；26.4.5 强制加载且失败时同步抛 NetworkError。
+   - **修复（手动）**：从 `static.matterport.com/showcase/<version>/images/<file>` 直接 curl 下载。**这些路径无 origin/referer 限制**，直接 curl 即可（与 `webgl-vendors/` 路径同性质）。
+   - **后续**：应该把这些文件加进 `matterport-dl.py` 的 `image_files` 列表（line 539），但需要先确认它们对老版本 Showcase 也存在或不冲突。当前手动 curl 即可。
 
 ## 已知问题（无需修复）
 - 插件 404（compass、minimap 等）— 预期行为，不影响核心导览
