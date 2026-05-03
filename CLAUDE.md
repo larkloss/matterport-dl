@@ -88,6 +88,7 @@ venv\Scripts\python.exe run.py DHNjTb7tAw5 127.0.0.1 8081   # 535 Park Avenue_4A
 venv\Scripts\python.exe run.py zTURYF5wgYr 127.0.0.1 8081   # 16 Point Rd, Bellport, NY
 venv\Scripts\python.exe run.py czVDUnbDue6 127.0.0.1 8081   # 8111 Saint Martins Ln, Philadelphia, PA
 venv\Scripts\python.exe run.py 3Yzq4Bq71BP 127.0.0.1 8081   # 240 Library Place, Princeton NJ
+venv\Scripts\python.exe run.py KNSj7socXtz 127.0.0.1 8081   # 2222 Wyoming Ave NW, Washington DC
 ```
 浏览器打开 `http://127.0.0.1:8081`
 
