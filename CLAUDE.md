@@ -18,7 +18,8 @@
 | 8111 Saint Martins Ln, Philadelphia, PA | `czVDUnbDue6` | ✅ 已验证（私有模型）|
 | 240 Library Place, Princeton, NJ | `3Yzq4Bq71BP` | ✅ 已验证 |
 | 2222 Wyoming Ave NW, Washington, DC | `KNSj7socXtz` | ✅ 已验证（私有模型，Showcase 26.4.5 首例）|
-
+| 2388 W Lake of the Isles Pkwy, Minneapolis, MN | `MjDCcEUapar` | ✅ 已验证（MLS 公开模型，免 token，Showcase 26.4.5）|
+| 340 S Plymouth Blvd, Los Angeles, CA | `JuV9VNgJzob` | ❌ 未验证（手动添加，需要验证）|
 ## 项目状态
 
 ### 已完成
@@ -75,6 +76,13 @@
 - **defurnished 模型**（companion id `0m52t3rzmeqydn21h9ezerzid`，未下载）—— 但实现机制与 czVDUnbDue6 不同：**整模型替换**而非 overlay 层叠加，所以踩坑 #5 不适用，没漏 overlay tile
 - 触发了 3 个新坑（详见踩坑 #6/#7/#8）：插件下载 400 致命、`/api/mp/accounts/graph` 端点、新 image/font 资源缺失
 
+**MjDCcEUapar（2388 W Lake of the Isles Pkwy, Minneapolis, MN）— MLS 公开模型**
+- 总下载资源：42368（Success 42174，99.4%，21 个 403 都是 Matterport CDN 死链） | 生成裁剪图：1861 | 12 GB
+- Showcase 26.4.5_webgl-632（与 KNSj7socXtz 同版本）
+- **不需要 auth token** —— iframe URL 含 `mls=1` 但无 `auth=Bearer`，只用 applicationKey + brand=0 + mls=1 即可（首个免 token 的 homes.com 模型，看下方"MLS 公开模型下载"小节）
+- 无 defurnished view，无 overlay 层
+- 26.4.5 新静态资源里 5 个被 matterport-dl 自动下了（scope/vert_arrows/surface_grid/2 个 mp-font），4 个走踩坑 #8 流程手动 curl 补回（atlas/logo-white/logo-white-r/nav_help_gesture）
+
 ## Commands
 
 ### 启动本地离线服务（切换模型只需改 ID）
@@ -89,6 +97,9 @@ venv\Scripts\python.exe run.py zTURYF5wgYr 127.0.0.1 8081   # 16 Point Rd, Bellp
 venv\Scripts\python.exe run.py czVDUnbDue6 127.0.0.1 8081   # 8111 Saint Martins Ln, Philadelphia, PA
 venv\Scripts\python.exe run.py 3Yzq4Bq71BP 127.0.0.1 8081   # 240 Library Place, Princeton NJ
 venv\Scripts\python.exe run.py KNSj7socXtz 127.0.0.1 8081   # 2222 Wyoming Ave NW, Washington DC
+venv\Scripts\python.exe run.py MjDCcEUapar 127.0.0.1 8081   # 2388 W Lake of the Isles Pkwy, Minneapolis MN
+venv\Scripts\python.exe run.py JuV9VNgJzob 127.0.0.1 8081   # 340 S Plymouth Blvd, Los Angeles, CA 
+
 ```
 浏览器打开 `http://127.0.0.1:8081`
 
@@ -123,6 +134,25 @@ venv\Scripts\python.exe run.py "https://my.matterport.com/show/?ref=pn&m=模型I
 - `downloadFile()` line 302：MAIN 请求容忍 HTTP 404 当响应含 `MP_PREFETCHED_MODELDATA`
 
 **速度注意**：私有模型 CDN 对 tileset 阶段会限速（~1.3 it/s），但后续全景瓦片阶段恢复正常（~23 it/s）。全程约 1-2 小时。
+
+### MLS 公开模型下载（homes.com 列表里的房源，免 token）
+
+部分 homes.com 房源是 MLS 公开数据，iframe URL 里**没有** `auth=Bearer` 参数，只带 `mls=1` 标记，免认证可下载。判断方式：抓 iframe `src` 看有没有 `auth=Bearer`。
+
+例（`MjDCcEUapar` = 2388 W Lake of the Isles Pkwy）：
+```
+https://my.matterport.com/show/?m=MjDCcEUapar&brand=0&mls=1&play=1&search=0&vr=0&applicationKey=249b3f19a520439a9f49173073cb49f4
+```
+
+**下载命令**（环境变量不要设 `MATTERPORT_AUTH_TOKEN`）：
+```bash
+cd "C:\Users\Larkl\Claude Project\matterport-dl"
+set MATTERPORT_APPLICATION_KEY=249b3f19a520439a9f49173073cb49f4
+set MATTERPORT_EXTRA_PARAMS=applicationKey=249b3f19a520439a9f49173073cb49f4&brand=0&mls=1
+venv\Scripts\python.exe run.py "https://my.matterport.com/show/?m=<model_id>"
+```
+
+**速度优势**：MLS 公开模型 CDN 不限速，全程 ~10-30 分钟（看大小），明显比私有模型快。
 
 ### 如何找到模型 ID
 在 homes.com 等网站的页面 HTML 中搜索 `api/v1/player/models/[ID]/thumb`，即可提取模型 ID。
