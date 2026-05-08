@@ -14,11 +14,12 @@
 | 528 Roslyn Rd, Kenilworth, IL | `Bmz3NvZfvx6` | ✅ 已验证 |
 | 8951 St Ives Dr, Los Angeles, CA | `pVAbacdvn9h` | ✅ 已验证 |
 | 535 Park Avenue_4AB, nyc | `DHNjTb7tAw5` | ✅ 已验证 |
-| 16 Point Rd, Bellport, NY | `zTURYF5wgYr` | ✅ 已验证（私有模型）|
 | 8111 Saint Martins Ln, Philadelphia, PA | `czVDUnbDue6` | ✅ 已验证（私有模型）|
 | 240 Library Place, Princeton, NJ | `3Yzq4Bq71BP` | ✅ 已验证 |
 | 2222 Wyoming Ave NW, Washington, DC | `KNSj7socXtz` | ✅ 已验证（私有模型，Showcase 26.4.5 首例）|
 | 2388 W Lake of the Isles Pkwy, Minneapolis, MN | `MjDCcEUapar` | ✅ 已验证（MLS 公开模型，免 token，Showcase 26.4.5）|
+| 1 W 72nd St Unit 84, New York, NY | `utaPFuhkSB5` | ✅ 已验证（私有模型，Showcase 26.5.1 首例，overlay 补丁首次自动生效）|
+| 136 Crest Rd, Ridgewood, NJ | `PUTBuppB2bC` | ✅ 已验证（无 auth 无 key URL 模式但仍需 applicationKey 环境变量）|
 | 340 S Plymouth Blvd, Los Angeles, CA | `JuV9VNgJzob` | ❌ 未验证（手动添加，需要验证）|
 ## 项目状态
 
@@ -53,11 +54,6 @@
 - 全景瓦片：12360 张 JPG | 3D 网格：19 个 `.glb`
 - 含 Draco/Basis 解码器
 
-**zTURYF5wgYr（16 Point Rd, Bellport, NY）— 私有模型**
-- 总下载资源：180875（Skipped 160590，Requested 20285，Success 20239）
-- 生成裁剪图：84176 张 | 全景瓦片 + 3D 网格 + Draco/Basis 解码器齐全
-- **必须先从浏览器抓 auth token 才能下载**（看下方"私有模型下载"章节）
-
 **czVDUnbDue6（8111 Saint Martins Ln, Philadelphia, PA）— 私有模型**
 - 全景瓦片：46332 张 JPG | 3D 网格：218 个 `.glb`
 - 总下载资源：39402（Success 39291，100%）| 生成裁剪图：8036
@@ -83,6 +79,19 @@
 - 无 defurnished view，无 overlay 层
 - 26.4.5 新静态资源里 5 个被 matterport-dl 自动下了（scope/vert_arrows/surface_grid/2 个 mp-font），4 个走踩坑 #8 流程手动 curl 补回（atlas/logo-white/logo-white-r/nav_help_gesture）
 
+**utaPFuhkSB5（1 W 72nd St Unit 84, New York, NY）— 私有模型**
+- 总下载资源：138170（Success 85483，62%，Failed404 52532 全是 overlay 试探正常 404）| 生成裁剪图：5588 | 23 GB
+- **Showcase 26.5.1_webgl-654 首例**（之前是 26.4.5，Matterport 又升级了）
+- **必须从浏览器抓 auth token**（私有模型）
+- **defurnished 模型 + in-place overlay 风格**（companion id `ugip3puc3ck781ushhnwzi0ed`）—— **首次让我们的 overlay 补丁在新下载时自动生效**：日志显示 `Found 1 overlay layer(s); queuing overlay tile downloads for 132 sweeps`，自动救出 14790 个 overlay tile（czVDUnbDue6 当时手动 curl 4590）
+- 26.5.1 新静态资源比 26.4.5 多缺：4 个 webgl-vendors（draco_decoder.wasm + basis_transcoder.wasm + 2 个 js）+ 9 个 26.4.5 同款 + 4 个 cursors + 4 个 css + 26 个 IBM Plex Sans 字体变体（cosmetic 跳过）。手动 curl 18/19 成功（`css/scene.css` 仍是 403 死链，与早期同步）
+
+**PUTBuppB2bC（136 Crest Rd, Ridgewood, NJ）— 无 auth 无 key URL 模式**
+- 总下载资源：36049（Success 35988（合并两次跑），99.8%）| 生成裁剪图：1504 | 9.6 GB
+- Showcase 26.5.1_webgl-654（同 utaPFuhkSB5）
+- **第三种 URL 模式**：iframe URL 既无 `auth=Bearer` 也无 `mls=1` 也无 `applicationKey`（只 `m=...&play=1&qs=1`）—— **但 matterport-dl 仍必须设 `MATTERPORT_APPLICATION_KEY` 环境变量**，否则 main CDN 给所有资产请求 400（看下方"无 auth 无 key URL 模式"小节）
+- **defurnished 模型 + 独立模型风格**（companion id `34mhcckaafix5hhezer547qta`，未下载）—— 不需 overlay 补丁，与 KNSj7socXtz 同款
+
 ## Commands
 
 ### 启动本地离线服务（切换模型只需改 ID）
@@ -93,11 +102,12 @@ venv\Scripts\python.exe run.py Kfa2BHFroVn 127.0.0.1 8081   # 111 S Van Ness Ave
 venv\Scripts\python.exe run.py Bmz3NvZfvx6 127.0.0.1 8081   # 528 Roslyn Rd
 venv\Scripts\python.exe run.py pVAbacdvn9h 127.0.0.1 8081   # 8951 St Ives Dr, LA
 venv\Scripts\python.exe run.py DHNjTb7tAw5 127.0.0.1 8081   # 535 Park Avenue_4AB, nyc
-venv\Scripts\python.exe run.py zTURYF5wgYr 127.0.0.1 8081   # 16 Point Rd, Bellport, NY
 venv\Scripts\python.exe run.py czVDUnbDue6 127.0.0.1 8081   # 8111 Saint Martins Ln, Philadelphia, PA
 venv\Scripts\python.exe run.py 3Yzq4Bq71BP 127.0.0.1 8081   # 240 Library Place, Princeton NJ
 venv\Scripts\python.exe run.py KNSj7socXtz 127.0.0.1 8081   # 2222 Wyoming Ave NW, Washington DC
 venv\Scripts\python.exe run.py MjDCcEUapar 127.0.0.1 8081   # 2388 W Lake of the Isles Pkwy, Minneapolis MN
+venv\Scripts\python.exe run.py utaPFuhkSB5 127.0.0.1 8081   # 1 W 72nd St Unit 84, NYC
+venv\Scripts\python.exe run.py PUTBuppB2bC 127.0.0.1 8081   # 136 Crest Rd, Ridgewood NJ
 venv\Scripts\python.exe run.py JuV9VNgJzob 127.0.0.1 8081   # 340 S Plymouth Blvd, Los Angeles, CA 
 
 ```
@@ -154,6 +164,25 @@ venv\Scripts\python.exe run.py "https://my.matterport.com/show/?m=<model_id>"
 
 **速度优势**：MLS 公开模型 CDN 不限速，全程 ~10-30 分钟（看大小），明显比私有模型快。
 
+### 无 auth 无 key URL 模式（部分 homes.com 房源，仍需 applicationKey）
+
+部分 homes.com 房源的 iframe `src` **既无 `auth=Bearer` 也无 `mls=1` 也无 `applicationKey`**，只有 `m=<id>&play=1&search=0&vr=0&qs=1` 这种最小参数。容易误以为完全免认证 —— **但实际上 matterport-dl 仍必须设 `MATTERPORT_APPLICATION_KEY` 环境变量**，否则 Matterport main 资产 CDN 对所有请求返回 HTTP 400（FailedUnknown），最终模型只下了 19% / 几 GB（小得离谱）。
+
+例（`PUTBuppB2bC` = 136 Crest Rd, Ridgewood NJ）：
+```
+https://my.matterport.com/show/?m=PUTBuppB2bC&play=1&search=0&vr=0&qs=1
+```
+
+**下载命令**（不设 `MATTERPORT_AUTH_TOKEN`，但要设 key）：
+```bash
+cd "C:\Users\Larkl\Claude Project\matterport-dl"
+set MATTERPORT_APPLICATION_KEY=249b3f19a520439a9f49173073cb49f4
+set MATTERPORT_EXTRA_PARAMS=applicationKey=249b3f19a520439a9f49173073cb49f4&brand=0&qs=1
+venv\Scripts\python.exe run.py "https://my.matterport.com/show/?m=<model_id>"
+```
+
+**诊断**：如果 Done 报告显示 `FailedUnknown` 数 > 几千 + 模型大小不到 5 GB，多半是没加 applicationKey，重跑就行（增量已下的会跳过）。
+
 ### 如何找到模型 ID
 在 homes.com 等网站的页面 HTML 中搜索 `api/v1/player/models/[ID]/thumb`，即可提取模型 ID。
 
@@ -190,10 +219,17 @@ venv\Scripts\python.exe run.py "https://my.matterport.com/show/?m=<model_id>"
    - **根因**：26.4.5 新增 `/api/mp/accounts/graph` POST 端点（账号/auth 类查询），原本的本地 server `do_POST()` 只识别 `/api/mp/models/graph`，新端点 404 → JS 抛 NetworkError → loadApplication 链式崩溃。
    - **修复**：`do_POST()` 同时识别 `/api/mp/models/graph` 和 `/api/mp/accounts/graph`，都路由到 `do_GraphRequest()`（返回 `{"data": {}}` 兜底）。已应用在 `showcase-latest-upgrade` 分支。
 
-8. **新静态资源 404 致 GLTFLoader 同步抛 NetworkError（Showcase 26.4.5+）** — 修完 #7 后又崩溃，触发链是模型 0.6s 加载后 `Failed to load .../images/scope.svg` 等导致 GLTFLoader 抛 NetworkError → loadApplication 崩。
-   - **根因**：26.4.5 引入了 `matterport-dl.py` 静态资源清单（`image_files`、`font_files`）里没列出的新文件：`scope.svg` `vert_arrows.png` `surface_grid_planar_256.png` `logo-white.svg` `logo-white-r.svg` `nav_help_gesture_drag_two_finger_rotate.svg` `atlas.png`（之前认为无害的，26.4.5 实际必需）`mp-font.woff` / `mp-font.woff2`。在 26.4.3 时 split.js (intersection visuals) 不需要这些；26.4.5 强制加载且失败时同步抛 NetworkError。
-   - **修复（手动）**：从 `static.matterport.com/showcase/<version>/images/<file>` 直接 curl 下载。**这些路径无 origin/referer 限制**，直接 curl 即可（与 `webgl-vendors/` 路径同性质）。
-   - **后续**：应该把这些文件加进 `matterport-dl.py` 的 `image_files` 列表（line 539），但需要先确认它们对老版本 Showcase 也存在或不冲突。当前手动 curl 即可。
+8. **新静态资源 404 致 GLTFLoader 同步抛 NetworkError（Showcase 26.4.5 / 26.5.1+）** — 修完 #7 后又崩溃，触发链是模型 0.6s 加载后 `Failed to load .../images/scope.svg` 等导致 GLTFLoader 抛 NetworkError → loadApplication 崩。
+   - **根因**：26.4.5 / 26.5.1 引入了 `matterport-dl.py` 静态资源清单（`image_files`、`font_files`）里没列出的新文件。
+   - **必修文件清单**（缺则 NetworkError 崩）：`images/scope.svg` `images/vert_arrows.png` `images/surface_grid_planar_256.png` `images/atlas.png` `images/logo-white.svg` `images/logo-white-r.svg` `images/nav_help_gesture_drag_two_finger_rotate.svg` `fonts/mp-font.woff` `fonts/mp-font.woff2`。**26.5.1 还多缺**：`webgl-vendors/three/0.184.0/libs/draco/gltf/draco_decoder.wasm` + `webgl-vendors/three/0.184.0/libs/basis/basis_transcoder.wasm` + 4 个 cursors（`cursors/grab.png` `grabbing.png` `zoom-in.png` `zoom-out.png`）+ 3 个 css（`unsupported_browser.css` `ws-autotours.css` `ws-blur.css`）。
+   - **修复（手动）**：从 `static.matterport.com/showcase/<showcase版本>/<path>` 或 `static.matterport.com/webgl-vendors/three/<three版本>/libs/<path>` 直接 curl 下载。**这些路径无 origin/referer 限制**，curl 即可。
+   - **永远拿不到的死链**（持续 403，无救，纯 cosmetic）：`css/scene.css`、`images/matterport-logo.svg`、`matterport-logo-light.svg`、`matterport-app-icon.svg`。
+   - **后续**：应该把这些文件加进 `matterport-dl.py` 的 `image_files` / `font_files` 列表（line 539）。当前手动 curl 即可，已下 5 个 26.4.5/26.5.1 模型都用这流程修过。
+
+9. **第三种 URL 模式仍需 applicationKey** — 部分 homes.com 房源 iframe URL 极简（无 `auth=Bearer` / 无 `mls=1` / 无 `applicationKey`），只有 `m=<id>&play=1&qs=1`。容易误以为可裸跑下载 —— 但实际 matterport-dl **必须设 `MATTERPORT_APPLICATION_KEY=249b3f19a520439a9f49173073cb49f4`** 否则 Matterport main CDN 给主资产请求全 400（统计 FailedUnknown 几万、最终模型 < 5 GB 太小）。
+   - **诊断**：Done 报告 `FailedUnknown` > 几千 + 模型异常小（<5 GB）= 没加 applicationKey。
+   - **修复**：补 applicationKey 重跑（增量跳过已下的，几分钟搞定剩余主资产）。
+   - **首例**：PUTBuppB2bC（136 Crest Rd, Ridgewood NJ）。详见 Commands 章节 "无 auth 无 key URL 模式" 小节。
 
 ## 已知问题（无需修复）
 - 插件 404（compass、minimap 等）— 预期行为，不影响核心导览
