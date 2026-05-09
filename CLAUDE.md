@@ -20,6 +20,7 @@
 | 2388 W Lake of the Isles Pkwy, Minneapolis, MN | `MjDCcEUapar` | ✅ 已验证（MLS 公开模型，免 token，Showcase 26.4.5）|
 | 1 W 72nd St Unit 84, New York, NY | `utaPFuhkSB5` | ✅ 已验证（私有模型，Showcase 26.5.1 首例，overlay 补丁首次自动生效）|
 | 136 Crest Rd, Ridgewood, NJ | `PUTBuppB2bC` | ✅ 已验证（无 auth 无 key URL 模式但仍需 applicationKey 环境变量）|
+| 173 Macdougal St Unit 5, New York, NY | `tVkP3reU4q6` | ✅ 已验证（私有模型，Showcase 26.5.1，in-place overlay 自动救 9180 tile）|
 | 340 S Plymouth Blvd, Los Angeles, CA | `JuV9VNgJzob` | ❌ 未验证（手动添加，需要验证）|
 ## 项目状态
 
@@ -92,6 +93,13 @@
 - **第三种 URL 模式**：iframe URL 既无 `auth=Bearer` 也无 `mls=1` 也无 `applicationKey`（只 `m=...&play=1&qs=1`）—— **但 matterport-dl 仍必须设 `MATTERPORT_APPLICATION_KEY` 环境变量**，否则 main CDN 给所有资产请求 400（看下方"无 auth 无 key URL 模式"小节）
 - **defurnished 模型 + 独立模型风格**（companion id `34mhcckaafix5hhezer547qta`，未下载）—— 不需 overlay 补丁，与 KNSj7socXtz 同款
 
+**tVkP3reU4q6（173 Macdougal St Unit 5, New York, NY）— 私有模型**
+- 总下载资源：73722（Success 47128，64%；Failed404 26523 全是 overlay 试探正常 404）| 生成裁剪图：5072 | 14 GB
+- Showcase 26.5.1_webgl-654（同 utaPFuhkSB5/PUTBuppB2bC）
+- **必须从浏览器抓 auth token**（私有模型，URL 含 `auth=Bearer` + `qs=1`，无 applicationKey 但脚本要加）
+- **defurnished 模型 + in-place overlay 风格**（companion id `uyfiabwsc0md34gi1q0cawcmc`，未下载）—— **overlay 补丁第二次自动生效**：日志显示 `Found 1 overlay layer(s); queuing overlay tile downloads for 70 sweeps`，自动救 9180 个 overlay tile
+- 26.5.1 必需文件大部分齐全（cursors / fonts / 4 个 webgl-vendors 都自动下了），仅 atlas.png + logo-white.svg + 2 个 logo svg 需手动 curl（4 个，比 utaPFuhkSB5 当时少很多）
+
 ## Commands
 
 ### 启动本地离线服务（切换模型只需改 ID）
@@ -108,6 +116,7 @@ venv\Scripts\python.exe run.py KNSj7socXtz 127.0.0.1 8081   # 2222 Wyoming Ave N
 venv\Scripts\python.exe run.py MjDCcEUapar 127.0.0.1 8081   # 2388 W Lake of the Isles Pkwy, Minneapolis MN
 venv\Scripts\python.exe run.py utaPFuhkSB5 127.0.0.1 8081   # 1 W 72nd St Unit 84, NYC
 venv\Scripts\python.exe run.py PUTBuppB2bC 127.0.0.1 8081   # 136 Crest Rd, Ridgewood NJ
+venv\Scripts\python.exe run.py tVkP3reU4q6 127.0.0.1 8081   # 173 Macdougal St Unit 5, NYC
 venv\Scripts\python.exe run.py JuV9VNgJzob 127.0.0.1 8081   # 340 S Plymouth Blvd, Los Angeles, CA 
 
 ```
