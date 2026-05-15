@@ -21,6 +21,10 @@
 | 1 W 72nd St Unit 84, New York, NY | `utaPFuhkSB5` | ✅ 已验证（私有模型，Showcase 26.5.1 首例，overlay 补丁首次自动生效）|
 | 136 Crest Rd, Ridgewood, NJ | `PUTBuppB2bC` | ✅ 已验证（无 auth 无 key URL 模式但仍需 applicationKey 环境变量）|
 | 173 Macdougal St Unit 5, New York, NY | `tVkP3reU4q6` | ✅ 已验证（私有模型，Showcase 26.5.1，in-place overlay 自动救 9180 tile）|
+| 91 Algonquin Rd, Fairfield, CT — 主屋 | `mUT8ygkB5Tc` | ✅ 已验证（私有模型，Showcase **26.5.2** 首例，159 sweep / 29 GB） |
+| 91 Algonquin Rd, Fairfield, CT — 附属 1 | `YuuxsvSH9S3` | ✅ 已验证（私有，13 sweep / 2.6 GB，同房产第 2 个 model）|
+| 91 Algonquin Rd, Fairfield, CT — 附属 2 | `cw4ASygjtAC` | ✅ 已验证（私有，1.5 GB，同房产第 3 个 model，无 overlay）|
+| 91 Algonquin Rd, Fairfield, CT — 鸟瞰 | `91-algonquin-aerial-splat/` | ✅ 已验证（**Gaussian Splatting 航拍** —— CoStar Matterport Exterior，57 MB） |
 | 340 S Plymouth Blvd, Los Angeles, CA | `JuV9VNgJzob` | ❌ 未验证（手动添加，需要验证）|
 ## 项目状态
 
@@ -100,6 +104,28 @@
 - **defurnished 模型 + in-place overlay 风格**（companion id `uyfiabwsc0md34gi1q0cawcmc`，未下载）—— **overlay 补丁第二次自动生效**：日志显示 `Found 1 overlay layer(s); queuing overlay tile downloads for 70 sweeps`，自动救 9180 个 overlay tile
 - 26.5.1 必需文件大部分齐全（cursors / fonts / 4 个 webgl-vendors 都自动下了），仅 atlas.png + logo-white.svg + 2 个 logo svg 需手动 curl（4 个，比 utaPFuhkSB5 当时少很多）
 
+**91 Algonquin Rd, Fairfield, CT — 多模型房产（首例，3 个 Matterport + 1 个航拍 splat）**
+
+> 这套 homes.com 房产用了**多个独立 Matterport model + 1 个 Gaussian Splatting 鸟瞰图**。Player 内部 thumbnail 切换不改 iframe src，是 Matterport SDK 用 JS 在同一 iframe 内换 model。每个 model 独立 auth token。判断方式：在 homes.com 页面 JS 跑 `for (const m of document.documentElement.outerHTML.matchAll(/[\"']m[\"']\s*:\s*[\"']([A-Za-z0-9]{11})[\"']/g)) ids.add(m[1]);` 列出所有 model ID。3 个建筑 + 鸟瞰：
+
+- **`mUT8ygkB5Tc`（主屋）** — Showcase **26.5.2_webgl-687_g2028078226 首例**（之前都是 26.4.5 / 26.5.1，Matterport 又升级了）。159 sweep / 29 GB / 19848 crops / 81090 main tasks。defurnished + in-place overlay → 6630 overlay tile 自动救出。Three.js 仍是 0.184.0 路径。
+- **`YuuxsvSH9S3`（附属建筑 1）** — 13 sweep / 2.6 GB。同样 in-place overlay defurnished。
+- **`cw4ASygjtAC`（附属建筑 2）** — 5142 任务 / 99% 成功 / 1.5 GB。无 overlay layer，最简结构。
+- **航拍 Gaussian Splatting** — 见下方专门章节。
+
+**26.5.2 新缺失文件**（matterport-dl 又漏了一批）：`scope.svg` `atlas.png` `logo-white.svg` `mp-font.woff/.woff2` `cursors/grab.png` 等 16 个，都从 `static.matterport.com/showcase/26.5.2_webgl-687-g2028078226/` 直接 curl 即可（无 origin/referer 限制）。
+
+**91 Algonquin Rd 鸟瞰图 — Gaussian Splatting / CoStar Matterport Exterior**
+- 总大小 **57 MB / 18 文件**（独立目录 `downloads/91-algonquin-aerial-splat/`，**不在 Matterport model 目录下**）
+- **完全不同于 Matterport Showcase** —— 用 3D Gaussian Splatting 技术（2023 新算法，渲染 outdoor/aerial 比 photogrammetry mesh 自然得多）
+- **域名/路径**：`https://www.homes.com/matterport-exterior-viewer/?t=<token>&a=<asset_id>&e=<entity_id>&edn=<edn>&at=131&mi=true&mc=true`，资产路径 `https://www.homes.com/matterport-community/<UUID>/{means_l,means_u,quats,scales,sh0}.webp`
+- **5 个 splat 数据 webp**（共 50 MB）：
+  - `means_l.webp` / `means_u.webp` — XYZ 位置（high/low 字节拆分编码精度）
+  - `quats.webp` — 旋转四元数
+  - `scales.webp` — 各向异性缩放
+  - `sh0.webp` — 球谐光照系数（基色，仅 0 阶 → 不带 view-dependent 反射，简化版）
+- **下载方式见专门章节"Gaussian Splatting 航拍场景下载"**
+
 ## Commands
 
 ### 启动本地离线服务（切换模型只需改 ID）
@@ -117,10 +143,49 @@ venv\Scripts\python.exe run.py MjDCcEUapar 127.0.0.1 8081   # 2388 W Lake of the
 venv\Scripts\python.exe run.py utaPFuhkSB5 127.0.0.1 8081   # 1 W 72nd St Unit 84, NYC
 venv\Scripts\python.exe run.py PUTBuppB2bC 127.0.0.1 8081   # 136 Crest Rd, Ridgewood NJ
 venv\Scripts\python.exe run.py tVkP3reU4q6 127.0.0.1 8081   # 173 Macdougal St Unit 5, NYC
+venv\Scripts\python.exe run.py mUT8ygkB5Tc 127.0.0.1 8081   # 91 Algonquin Rd 主屋 (Fairfield CT)
+venv\Scripts\python.exe run.py YuuxsvSH9S3 127.0.0.1 8081   # 91 Algonquin Rd 附属建筑 1
+venv\Scripts\python.exe run.py cw4ASygjtAC 127.0.0.1 8081   # 91 Algonquin Rd 附属建筑 2
 venv\Scripts\python.exe run.py JuV9VNgJzob 127.0.0.1 8081   # 340 S Plymouth Blvd, Los Angeles, CA 
 
 ```
 浏览器打开 `http://127.0.0.1:8081`
+
+### 启动本地 Gaussian Splatting viewer 服务（91 Algonquin 鸟瞰）
+
+跟 Matterport Showcase 的 8081 不同（避免冲突），用普通 Python 静态 HTTP server 起在 **8083**：
+
+```cmd
+cd "C:\Users\Larkl\Claude Project\matterport-dl\downloads\91-algonquin-aerial-splat"
+python -m http.server 8083 --bind 127.0.0.1
+```
+
+或用项目 venv 的 Python：
+```cmd
+cd "C:\Users\Larkl\Claude Project\matterport-dl"
+venv\Scripts\python.exe -m http.server 8083 --bind 127.0.0.1 --directory downloads\91-algonquin-aerial-splat
+```
+
+浏览器打开 `http://127.0.0.1:8083/`，**直接进 viewer，无需任何 query 参数**（HTML 里 `window.sse.contents` 已经被 ROT-3 重写指向本地路径）。
+
+**接收 splat 数据的临时 receiver 脚本**（用于重新抓数据时）：
+```python
+import http.server, os, sys
+SAVE = r'E:\matterport-dl\downloads\<dir>\matterport-community\<UUID>'
+os.makedirs(SAVE, exist_ok=True)
+class H(http.server.BaseHTTPRequestHandler):
+    def do_OPTIONS(self):
+        self.send_response(204); self.send_header('Access-Control-Allow-Origin','*')
+        self.send_header('Access-Control-Allow-Methods','POST,OPTIONS')
+        self.send_header('Access-Control-Allow-Headers','*'); self.end_headers()
+    def do_POST(self):
+        n = int(self.headers.get('Content-Length',0)); data = self.rfile.read(n)
+        with open(os.path.join(SAVE, self.path.lstrip('/')), 'wb') as f: f.write(data)
+        self.send_response(200); self.send_header('Access-Control-Allow-Origin','*'); self.end_headers()
+        self.wfile.write(b'ok'); sys.stderr.write(f'Saved {self.path} ({n}B)\n')
+    def log_message(self,*a): pass
+http.server.HTTPServer(('127.0.0.1', 8082), H).serve_forever()
+```
 
 ### 下载新房产
 ```bash
@@ -191,6 +256,52 @@ venv\Scripts\python.exe run.py "https://my.matterport.com/show/?m=<model_id>"
 ```
 
 **诊断**：如果 Done 报告显示 `FailedUnknown` 数 > 几千 + 模型大小不到 5 GB，多半是没加 applicationKey，重跑就行（增量已下的会跳过）。
+
+### Gaussian Splatting 航拍场景下载（CoStar Matterport Exterior，homes.com 的 "3D Exterior" tab）
+
+部分 homes.com 房产除了室内 Matterport 还附带 **CoStar Matterport Exterior** 鸟瞰 viewer（用 3D Gaussian Splatting 而非 Matterport mesh）。这套**完全不走 matterport-dl.py**，要单独抓。
+
+**判断**：homes.com 页面 tab 栏看到 "3D Exterior" 或 dollhouse 不够看到所有建筑，且页面有 video 元素（30s 1080p 预览循环）。
+
+**底层 URL 模式**：homes.com property 页面其实只显示视频预览，真正的 viewer 是独立 URL：
+```
+https://www.homes.com/matterport-exterior-viewer/?t=<obfs_token>&a=<asset_id>&e=<entity_id>&edn=<edn>&at=131&mi=true&mc=true
+```
+资产路径：`https://www.homes.com/matterport-community/<UUID>/<file>.webp`
+
+**抓取流程**（举例 `91 Algonquin Rd`）：
+
+1. **找到 viewer URL**：homes.com 页面 F12 Console 跑：
+   ```js
+   [...document.querySelectorAll('iframe')].map(f=>f.src).filter(s=>s.includes('matterport-exterior-viewer'))[0]
+   ```
+2. **打开该 viewer URL**，F12 → Console 跑：
+   ```js
+   performance.getEntriesByType('resource').filter(e=>e.name.includes('matterport-community')).map(e=>new URL(e.name).pathname)
+   ```
+   会列出所有 splat 资产路径（一般 5 个：`means_l.webp` / `means_u.webp` / `quats.webp` / `scales.webp` / `sh0.webp`）。同时记下 asset UUID（`/matterport-community/<UUID>/...`）。
+3. **直 curl 会被 403**（需要 cookie），所以用本地 Python POST 桥接：
+   - 起 receiver server（端口 8082）见下方"启动本地 Gaussian Splatting viewer 服务"小节的代码模板
+   - 在 viewer 页 Console 跑：
+     ```js
+     (async () => {
+       const ASSET = '<UUID>';
+       const files = ['means_l.webp', 'means_u.webp', 'quats.webp', 'scales.webp', 'sh0.webp'];
+       for (const f of files) {
+         const r = await fetch('/matterport-community/' + ASSET + '/' + f);
+         const blob = await r.blob();
+         await fetch('http://127.0.0.1:8082/' + f, {method: 'POST', body: blob});
+       }
+     })();
+     ```
+   - 同样手法抓 viewer 静态资产（`/css/*.css`、`/js/*.js`、`/fonts/*.woff2`、`/index.html`、`/assets/images/pin-selected.png`、`/favicon.ico`）
+4. **修 HTML 让它走本地路径**：viewer HTML 里 `window.sse.contents` 是 ROT-3（凯撒+3 字符位移）加密的 JSON，含 5 个 splat 文件的远程 URL。脚本：
+   ```python
+   def rot3(s, shift): return ''.join(chr(ord(c)+shift) for c in s)
+   # decode → str.replace(homes.com → 127.0.0.1:8083) → re-encode
+   ```
+   **测过的对照**：`kwwsv=22zzz1krphv1frp` 解密就是 `https://www.homes.com`。
+5. **本地服务**：用普通 `python -m http.server 8083` 起静态 server 即可
 
 ### 如何找到模型 ID
 在 homes.com 等网站的页面 HTML 中搜索 `api/v1/player/models/[ID]/thumb`，即可提取模型 ID。
