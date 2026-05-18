@@ -26,6 +26,39 @@
 | 91 Algonquin Rd, Fairfield, CT — 附属 2 | `cw4ASygjtAC` | ✅ 已验证（私有，1.5 GB，同房产第 3 个 model，无 overlay）|
 | 91 Algonquin Rd, Fairfield, CT — 鸟瞰 | `91-algonquin-aerial-splat/` | ✅ 已验证（**Gaussian Splatting 航拍** —— CoStar Matterport Exterior，57 MB） |
 | 340 S Plymouth Blvd, Los Angeles, CA | `JuV9VNgJzob` | ❌ 未验证（手动添加，需要验证）|
+
+## Git Remote 与分支约定
+
+**Remote 命名（2026-05-18 重命名完成，按 git 主流惯例对齐）**：
+
+| Remote | URL | 用途 |
+|--------|-----|------|
+| `origin` | `https://github.com/larkloss/matterport-dl.git` | **你的 fork = 主仓库**。日常 `git push` / `git pull` 都走它 |
+| `upstream` | `https://github.com/rebane2001/matterport-dl.git` | 原作者上游，已不太更新，偶尔同步用 |
+
+**所有本地分支都跟踪 `origin/*`**：
+- `main` — canonical 分支，包含全部 commit（11 个房产 + .github 清理 + macOS 支持）。`git clone` 默认拿这条
+- `showcase-latest-upgrade` — 历史 topic 分支，目前与 `main` 同 commit
+- `overlay-tiles-pr` — 提给上游 [rebane2001#199](https://github.com/rebane2001/matterport-dl/pull/199) 的源分支，**不要删**
+
+**日常用法**：
+
+```powershell
+git push                                              # 推到自己的 fork (origin)
+git pull                                              # 从自己的 fork 拉
+git fetch upstream && git merge upstream/main         # 偶尔同步上游
+```
+
+**如果在另一台机器 clone 后看到 remote 命名是反着的**（origin → rebane2001、fork → larkloss），跑下面 4 行恢复约定：
+
+```powershell
+git remote rename origin upstream
+git remote rename fork origin
+git fetch origin
+git fetch upstream
+git branch --set-upstream-to=origin/main main
+```
+
 ## 项目状态
 
 ### 已完成
