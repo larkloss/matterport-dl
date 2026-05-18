@@ -2,3 +2,19 @@
 downloads/
 output/
 defaults.json
+
+# Python virtual environments (Windows + macOS)
+venv/
+.venv/
+.venv-macos/
+
+# Python bytecode / build caches
+__pycache__/
+*.pyc
+
+# macOS metadata (AppleDouble on NTFS/exFAT, Finder thumbnails)
+._*
+.DS_Store
+
+# Claude Code local-only settings (per-machine permissions/MCP overrides)
+.claude/settings.local.json

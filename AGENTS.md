@@ -1,10 +1,10 @@
-# CLAUDE.md
+# AGENTS.md
 
 ## Project Overview
 
 基于 [matterport-dl](https://github.com/rebane2001/matterport-dl) 的 Matterport 虚拟导览离线归档项目。支持多套房产共存，通过模型 ID 切换。
 
-- **项目根目录**: `C:\Users\Larkl\Claude Project\matterport-dl\`
+- **项目根目录**: `C:\Users\Larkl\Codex Project\matterport-dl\`
 
 ### 已归档房产
 
@@ -158,7 +158,7 @@ cd "/Volumes/9100 Pro/matterport-dl"
 
 ### 启动本地离线服务（切换模型只需改 ID）
 ```bash
-cd "C:\Users\Larkl\Claude Project\matterport-dl"
+cd "C:\Users\Larkl\Codex Project\matterport-dl"
 
 venv\Scripts\python.exe run.py Kfa2BHFroVn 127.0.0.1 8081   # 111 S Van Ness Ave, Los Angeles
 venv\Scripts\python.exe run.py Bmz3NvZfvx6 127.0.0.1 8081   # 528 Roslyn Rd
@@ -184,13 +184,13 @@ venv\Scripts\python.exe run.py JuV9VNgJzob 127.0.0.1 8081   # 340 S Plymouth Blv
 跟 Matterport Showcase 的 8081 不同（避免冲突），用普通 Python 静态 HTTP server 起在 **8083**：
 
 ```cmd
-cd "C:\Users\Larkl\Claude Project\matterport-dl\downloads\91-algonquin-aerial-splat"
+cd "C:\Users\Larkl\Codex Project\matterport-dl\downloads\91-algonquin-aerial-splat"
 python -m http.server 8083 --bind 127.0.0.1
 ```
 
 或用项目 venv 的 Python：
 ```cmd
-cd "C:\Users\Larkl\Claude Project\matterport-dl"
+cd "C:\Users\Larkl\Codex Project\matterport-dl"
 venv\Scripts\python.exe -m http.server 8083 --bind 127.0.0.1 --directory downloads\91-algonquin-aerial-splat
 ```
 
@@ -233,7 +233,7 @@ venv\Scripts\python.exe run.py "https://my.matterport.com/show/?ref=pn&m=模型I
 
 2. **下载命令**（需要修改版 `matterport-dl.py`，已注入以下环境变量支持）：
    ```bash
-   cd "C:\Users\Larkl\Claude Project\matterport-dl"
+   cd "C:\Users\Larkl\Codex Project\matterport-dl"
    set MATTERPORT_AUTH_TOKEN=<token 裸值，不带 "Bearer ">
    set MATTERPORT_APPLICATION_KEY=249b3f19a520439a9f49173073cb49f4
    set MATTERPORT_EXTRA_PARAMS=auth=Bearer%20<token>&applicationKey=249b3f19a520439a9f49173073cb49f4&brand=0
@@ -258,7 +258,7 @@ https://my.matterport.com/show/?m=MjDCcEUapar&brand=0&mls=1&play=1&search=0&vr=0
 
 **下载命令**（环境变量不要设 `MATTERPORT_AUTH_TOKEN`）：
 ```bash
-cd "C:\Users\Larkl\Claude Project\matterport-dl"
+cd "C:\Users\Larkl\Codex Project\matterport-dl"
 set MATTERPORT_APPLICATION_KEY=249b3f19a520439a9f49173073cb49f4
 set MATTERPORT_EXTRA_PARAMS=applicationKey=249b3f19a520439a9f49173073cb49f4&brand=0&mls=1
 venv\Scripts\python.exe run.py "https://my.matterport.com/show/?m=<model_id>"
@@ -277,7 +277,7 @@ https://my.matterport.com/show/?m=PUTBuppB2bC&play=1&search=0&vr=0&qs=1
 
 **下载命令**（不设 `MATTERPORT_AUTH_TOKEN`，但要设 key）：
 ```bash
-cd "C:\Users\Larkl\Claude Project\matterport-dl"
+cd "C:\Users\Larkl\Codex Project\matterport-dl"
 set MATTERPORT_APPLICATION_KEY=249b3f19a520439a9f49173073cb49f4
 set MATTERPORT_EXTRA_PARAMS=applicationKey=249b3f19a520439a9f49173073cb49f4&brand=0&qs=1
 venv\Scripts\python.exe run.py "https://my.matterport.com/show/?m=<model_id>"
