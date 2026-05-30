@@ -25,6 +25,7 @@
 | 91 Algonquin Rd, Fairfield, CT — 附属 1 | `YuuxsvSH9S3` | ✅ 已验证（私有，13 sweep / 2.6 GB，同房产第 2 个 model）|
 | 91 Algonquin Rd, Fairfield, CT — 附属 2 | `cw4ASygjtAC` | ✅ 已验证（私有，1.5 GB，同房产第 3 个 model，无 overlay）|
 | 91 Algonquin Rd, Fairfield, CT — 鸟瞰 | `91-algonquin-aerial-splat/` | ✅ 已验证（**Gaussian Splatting 航拍** —— CoStar Matterport Exterior，57 MB） |
+| 11101 Piney Meetinghouse Rd, Potomac, MD | `1eYCGLYigvm` | ✅ 已验证（公开模型，applicationKey 模式无 auth 无 mls，Showcase 26.5.2）|
 | 340 S Plymouth Blvd, Los Angeles, CA | `JuV9VNgJzob` | ❌ 未验证（手动添加，需要验证）|
 
 ## Git Remote 与分支约定
@@ -159,6 +160,14 @@ git branch --set-upstream-to=origin/main main
   - `sh0.webp` — 球谐光照系数（基色，仅 0 阶 → 不带 view-dependent 反射，简化版）
 - **下载方式见专门章节"Gaussian Splatting 航拍场景下载"**
 
+**1eYCGLYigvm（11101 Piney Meetinghouse Rd, Potomac, MD）— 公开模型（applicationKey 模式）**
+- 全景瓦片：53019 张 JPG | 3D 网格：178 个 `.glb`
+- 总下载资源：53482（Success 53148，99%；Failed403 22 + Failed404 3 全是 CDN 死链 / skybox 试探，FailedUnknown 0）| 生成裁剪图：2906 | 15 GB
+- Showcase 26.5.2_webgl-687-g2028078226（与 91 Algonquin 主屋同版本）+ Three.js 0.184.0
+- **第四种 homes.com URL 模式**：iframe URL 含 `applicationKey` 但**无** `auth=Bearer`、**无** `mls=1` —— 比 MLS 模式少 `mls=1` 标记。下载只需 `MATTERPORT_APPLICATION_KEY` + `brand=0`，免 token（看 Commands 章节"公开模型下载（applicationKey 模式）"小节）
+- 无 defurnished view，无 overlay 层
+- 26.5.2 静态资源大部分自动下全（webgl-vendors / cursors / css / fonts / mp-font 都齐），仅 3 个 images 走踩坑 #8 手动 curl 补回：`atlas.png` `logo-white.svg` `nav_help_gesture_drag_two_finger_rotate.svg`
+
 ## Commands
 
 ### 跨平台虚拟环境注意（Windows + macOS）
@@ -207,6 +216,7 @@ venv\Scripts\python.exe run.py tVkP3reU4q6 127.0.0.1 8081   # 173 Macdougal St U
 venv\Scripts\python.exe run.py mUT8ygkB5Tc 127.0.0.1 8081   # 91 Algonquin Rd 主屋 (Fairfield CT)
 venv\Scripts\python.exe run.py YuuxsvSH9S3 127.0.0.1 8081   # 91 Algonquin Rd 附属建筑 1
 venv\Scripts\python.exe run.py cw4ASygjtAC 127.0.0.1 8081   # 91 Algonquin Rd 附属建筑 2
+venv\Scripts\python.exe run.py 1eYCGLYigvm 127.0.0.1 8081   # 11101 Piney Meetinghouse Rd, Potomac MD
 venv\Scripts\python.exe run.py JuV9VNgJzob 127.0.0.1 8081   # 340 S Plymouth Blvd, Los Angeles, CA 
 
 ```
@@ -317,6 +327,25 @@ venv\Scripts\python.exe run.py "https://my.matterport.com/show/?m=<model_id>"
 ```
 
 **诊断**：如果 Done 报告显示 `FailedUnknown` 数 > 几千 + 模型大小不到 5 GB，多半是没加 applicationKey，重跑就行（增量已下的会跳过）。
+
+### 公开模型下载（applicationKey 模式，无 auth 无 mls）
+
+部分 homes.com 房源的 iframe `src` 含 `applicationKey` 参数但**无** `auth=Bearer`、**无** `mls=1`，形如 `m=<id>&play=1&search=0&vr=0&applicationKey=249b3f19...`。这是公开模型，免 token，下载最省事 —— 跟 MLS 模式几乎一样，只是 EXTRA_PARAMS 不带 `mls=1`。
+
+例（`1eYCGLYigvm` = 11101 Piney Meetinghouse Rd, Potomac MD）：
+```
+https://my.matterport.com/show/?m=1eYCGLYigvm&play=1&search=0&vr=0&applicationKey=249b3f19a520439a9f49173073cb49f4
+```
+
+**下载命令**（不设 `MATTERPORT_AUTH_TOKEN`，EXTRA_PARAMS 不带 `mls=1`/`qs=1`）：
+```bash
+cd "C:\Users\Larkl\Claude Project\matterport-dl"
+set MATTERPORT_APPLICATION_KEY=249b3f19a520439a9f49173073cb49f4
+set MATTERPORT_EXTRA_PARAMS=applicationKey=249b3f19a520439a9f49173073cb49f4&brand=0
+venv\Scripts\python.exe run.py "https://my.matterport.com/show/?m=<model_id>"
+```
+
+判断方式：抓 iframe `src`，看到有 `applicationKey` 但没 `auth`/`mls` 就用这条。CDN 不限速，速度跟 MLS 模式相当（首例 `1eYCGLYigvm` 全程几分钟下完 15 GB / 5.3 万资源，FailedUnknown 0）。
 
 ### Gaussian Splatting 航拍场景下载（CoStar Matterport Exterior，homes.com 的 "3D Exterior" tab）
 
